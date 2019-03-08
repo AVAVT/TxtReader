@@ -19,7 +19,7 @@ public class ReadSceneManager : MonoBehaviour
   public Button speedMultiplierButton;
   public Text autoText;
   int currentChapter;
-  float countDown = 1;
+  float scrollPositionSaveTimer = 1;
   float normalizedAutoScrollSpeed = 0f;
   bool isAuto = false;
   float speedMultiplier = 1;
@@ -67,11 +67,11 @@ public class ReadSceneManager : MonoBehaviour
       if (scrollRect.verticalNormalizedPosition <= 0) Next();
     }
 
-    countDown -= Time.deltaTime;
-    if (countDown <= 0)
+    scrollPositionSaveTimer -= Time.deltaTime;
+    if (scrollPositionSaveTimer <= 0)
     {
       PlayerPrefs.SetFloat(PlayerPrefKeys.CURRENT_SCROLL_PREF, scrollRect.verticalNormalizedPosition);
-      countDown += 1;
+      scrollPositionSaveTimer += 1;
     }
   }
 
@@ -142,7 +142,7 @@ public class ReadSceneManager : MonoBehaviour
     Screen.sleepTimeout = isAuto ? SleepTimeout.NeverSleep : SleepTimeout.SystemSetting;
     speedMultiplierButton.gameObject.SetActive(isAuto);
     chapterNumberInput.gameObject.SetActive(!isAuto);
-    if (!isAuto) SetSpeedSliderVisibility(false);
+    SetSpeedSliderVisibility(isAuto);
   }
 
   public void SetSpeedMultiplier(float value)
