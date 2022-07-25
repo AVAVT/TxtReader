@@ -10,9 +10,13 @@ public class MenuSceneManager : MonoBehaviour
   public CommonProgressBar commonProgressBar;
   public InputField urlInputField;
   public Button downloadButton;
-
   public void Start()
   {
+#if UNITY_ANDROID && !UNITY_EDITOR
+    ApplicationChrome.statusBarState = ApplicationChrome.States.TranslucentOverContent;
+    ApplicationChrome.statusBarColor = ApplicationChrome.navigationBarColor = 0xff222222;
+#endif
+
     if (PlayerPrefs.HasKey(PlayerPrefKeys.CURRENT_BOOK_PREF))
     {
       var bookName = PlayerPrefs.GetString(PlayerPrefKeys.CURRENT_BOOK_PREF);
@@ -24,6 +28,7 @@ public class MenuSceneManager : MonoBehaviour
       urlInputField.text = PlayerPrefs.GetString(PlayerPrefKeys.SERVER_URL_PREF, "http://192.168.0.148");
     }
   }
+
   public void DownloadBooks()
   {
     PlayerPrefs.SetString(PlayerPrefKeys.SERVER_URL_PREF, urlInputField.text.Trim());

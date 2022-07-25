@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using Ionic.Zip;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class DownloadService : MonoBehaviour
 {
@@ -21,23 +22,32 @@ public class DownloadService : MonoBehaviour
   }
   private IEnumerator DownloadFile(string url, string fileName, Action OnDone, Action<string> OnError, Action<float> OnProgress)
   {
-    var www = new WWW(url);
+    UnityWebRequest www = new UnityWebRequest(url);
+
+    www.downloadHandler = new DownloadHandlerBuffer();
+    www.SendWebRequest();
+
     while (!www.isDone)
     {
-      OnProgress?.Invoke(www.progress);
+      OnProgress?.Invoke(www.downloadProgress);
       yield return null;
     }
 
-    if (!string.IsNullOrEmpty(www.error)) OnError(www.error);
+    if (www.isNetworkError || www.isHttpError)
+    {
+      Debug.LogError(www.error);
+      OnError(www.error);
+    }
     else
     {
-      byte[] data = www.bytes;
+      byte[] data = www.downloadHandler.data;
       var systemExtractFile = Path.Combine(Application.persistentDataPath, fileName);
       Debug.Log(systemExtractFile);
       File.WriteAllBytes(systemExtractFile, data);
       OnDone?.Invoke();
     }
   }
+
   private void Unzip(string fileName, Action OnDone, Action<string> OnError, string extractPath = null)
   {
     var persistentDataPath = Application.persistentDataPath;

@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 using TMPro;
-using Lean.Touch;
 using UnityEngine.SceneManagement;
 using System.IO;
-using Newtonsoft.Json.Linq;
 
 public class ReadSceneManager : MonoBehaviour
 {
@@ -73,6 +71,8 @@ public class ReadSceneManager : MonoBehaviour
       PlayerPrefs.SetFloat(PlayerPrefKeys.CURRENT_SCROLL_PREF, scrollRect.verticalNormalizedPosition);
       scrollPositionSaveTimer += 1;
     }
+
+    if (Input.GetKeyDown(KeyCode.Escape)) ToMenu();
   }
 
   public void OnValueChanged(string value)
