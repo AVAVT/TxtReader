@@ -16,16 +16,25 @@ public class ReadSceneManager : MonoBehaviour
   public Slider speedSlider;
   public Button speedMultiplierButton;
   public Text autoText;
+  public Color speedButtonActiveColor;
+  public Color speedButtonInactiveColor;
+  public RectTransform goToTopButton;
+  public VerticalLayoutGroup textVerticalLayoutGroup;
+  public GameObject translationPart;
+  public Translator translator;
+
   int currentChapter;
   float scrollPositionSaveTimer = 1;
   float normalizedAutoScrollSpeed = 0f;
   bool isAuto = false;
   float speedMultiplier = 1;
-  public Color speedButtonActiveColor;
-  public Color speedButtonInactiveColor;
-
   List<string> chapterNames;
   string bookName;
+  string bookDir;
+  TMP_Text contentText;
+  TxtEventHandler txtEventHandler;
+  string content;
+
   void Start()
   {
     if (!PlayerPrefs.HasKey(PlayerPrefKeys.CURRENT_BOOK_PREF))
@@ -35,7 +44,8 @@ public class ReadSceneManager : MonoBehaviour
     }
 
     bookName = PlayerPrefs.GetString(PlayerPrefKeys.CURRENT_BOOK_PREF);
-    var path = $"{Application.persistentDataPath}{BooksManager.BOOK_DIRECTORY}/{bookName}/";
+    bookDir = PlayerPrefs.GetString(PlayerPrefKeys.CURRENT_BOOK_DIR_PREF) ?? BooksManager.BOOK_DIRECTORY;
+    var path = $"{Application.persistentDataPath}{bookDir}{bookName}/";
     if (!Directory.Exists(path))
     {
       ToMenu();
@@ -43,7 +53,7 @@ public class ReadSceneManager : MonoBehaviour
     }
     try
     {
-      chapterNames = BooksManager.Instance.GetChapterList(bookName);
+      chapterNames = BooksManager.Instance.GetChapterList(bookDir, bookName);
       int chapter = PlayerPrefs.GetInt($"{bookName}{PlayerPrefKeys.CURRENT_CHAPTER_SUFFIX_PREF}", 1);
       GoToChapter(chapter);
       float scrollPos = PlayerPrefs.GetFloat(PlayerPrefKeys.CURRENT_SCROLL_PREF, 1);
@@ -54,6 +64,20 @@ public class ReadSceneManager : MonoBehaviour
     {
       ToMenu();
       return;
+    }
+
+    translationPart.SetActive(bookDir == BooksManager.BOOK_CN_DIRECTORY);
+
+    goToTopButton.sizeDelta = goToTopButton.sizeDelta.WithY(Screen.safeArea.y + 150);
+    textVerticalLayoutGroup.padding.top = Mathf.RoundToInt(goToTopButton.sizeDelta.y) + 100;
+    textVerticalLayoutGroup.padding.bottom = Mathf.RoundToInt((scrollRect.transform as RectTransform).rect.height * 0.5f);
+  }
+
+  private void OnDestroy()
+  {
+    if (txtEventHandler != null)
+    {
+      txtEventHandler.onCharacterSelection.RemoveAllListeners();
     }
   }
 
@@ -91,10 +115,17 @@ public class ReadSceneManager : MonoBehaviour
 
     try
     {
-      var content = BooksManager.Instance.GetChapter(bookName, chapterNames[chapterIndexBase1 - 1]);
+      content = BooksManager.Instance.GetChapter(bookDir, bookName, chapterNames[chapterIndexBase1 - 1]);
       for (int i = 0; i < container.childCount; i++) Destroy(container.GetChild(i).gameObject);
       var paragraphText = Instantiate(textPrefab, container);
-      paragraphText.GetComponent<TMP_Text>().text = $"\n\n{content}";
+      contentText = paragraphText.GetComponent<TMP_Text>();
+      contentText.text = content;
+
+      if (bookDir == BooksManager.BOOK_CN_DIRECTORY)
+      {
+        txtEventHandler = paragraphText.GetComponent<TxtEventHandler>();
+        txtEventHandler.onCharacterSelection.AddListener(Translate);
+      }
 
       chapterNumberInput.text = chapterIndexBase1.ToString();
       currentChapter = chapterIndexBase1;
@@ -112,6 +143,12 @@ public class ReadSceneManager : MonoBehaviour
     normalizedAutoScrollSpeed = 0;
     yield return null;
     normalizedAutoScrollSpeed = SCROLL_SPEED / container.rect.height;
+  }
+
+  void Translate(char c, int index)
+  {
+    contentText.text = content.Substring(0, index) + "<color=#ff00ff>" + content.Substring(index, 1) + "</color>" + content.Substring(index + 1);
+    translator.Translate(c).ConfigureAwait(false);
   }
 
   public void GoToTop()

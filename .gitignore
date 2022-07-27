@@ -32,3 +32,11 @@ sysinfo.txt
 *.apk
 
 .DS_Store
+/Assets/Fonts/ARIAL SDF.asset
+/Assets/Fonts/ARIAL SDF.asset.meta
+/Assets/Fonts/ARIAL.TTF
+/Assets/Fonts/ARIAL.TTF.meta
+/Assets/Fonts/SIMSUN SDF.asset
+/Assets/Fonts/SIMSUN SDF.asset.meta
+/Assets/Fonts/SIMSUN.TTC
+/Assets/Fonts/SIMSUN.TTC.meta

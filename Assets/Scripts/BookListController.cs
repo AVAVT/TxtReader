@@ -17,25 +17,24 @@ public class BookListController : MonoBehaviour
   {
     contentList.DestroyAllChildren();
 
-    string[] books = BooksManager.Instance.GetBookNames();
+    var books = BooksManager.Instance.GetBookNames();
     foreach (var s in books)
     {
       var newButton = Instantiate(buttonPrefab, contentList).GetComponent<BookListingItemController>();
-      var parts = s.Split('/');
-      newButton.InitializeWithBookName(this, parts[parts.Length - 1]);
+      newButton.InitializeWithBook(this, s.directory, s.bookName);
     }
   }
 
-  public void ConfirmDeleteBook(string bookName)
+  public void ConfirmDeleteBook(string bookDir, string bookName)
   {
     deleteCanvasController.ShowConfirmDelete(bookName, (isYes) =>
     {
-      if (isYes) DeleteBook(bookName);
+      if (isYes) DeleteBook(bookDir, bookName);
     });
   }
-  public void DeleteBook(string bookName)
+  public void DeleteBook(string bookDir, string bookName)
   {
-    BooksManager.Instance.DeleteBook(bookName);
+    BooksManager.Instance.DeleteBook(bookDir, bookName);
     RefreshBookList();
   }
 }

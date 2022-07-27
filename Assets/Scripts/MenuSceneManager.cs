@@ -20,7 +20,7 @@ public class MenuSceneManager : MonoBehaviour
     if (PlayerPrefs.HasKey(PlayerPrefKeys.CURRENT_BOOK_PREF))
     {
       var bookName = PlayerPrefs.GetString(PlayerPrefKeys.CURRENT_BOOK_PREF);
-      var path = $"{Application.persistentDataPath}{BooksManager.BOOK_DIRECTORY}/{bookName}/";
+      var path = $"{Application.persistentDataPath}{BooksManager.BOOK_DIRECTORY}{bookName}/";
       if (Directory.Exists(path)) SceneManager.LoadScene(1);
     }
     else
