@@ -57,7 +57,7 @@ public class Translator : MonoBehaviour
 
         if (string.IsNullOrEmpty(title.Trim() + detail.Trim())) return "";
 
-        return "-----\n<b>" + title.Trim() + "</b>\n\n" + detail.Trim();
+        return "-----\n<b>" + title.Trim() + "</b>\n" + detail.Trim();
       });
 
       translationText.text = c + " " + string.Join("\n", content.Where(x => !string.IsNullOrWhiteSpace(x)));
