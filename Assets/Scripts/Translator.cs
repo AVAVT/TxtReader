@@ -41,13 +41,13 @@ public class Translator : MonoBehaviour
       {
         if (index == 0)
         {
-          return string.Join("\n", m.QuerySelectorAll(".hvres-meaning")?.Take(2).Select(n => Regex.Replace(ExtractText(n).Split("\n")[0].Trim(), @"\s{2,}", "\n")) ?? new List<string>() { });
+          return string.Join("\n", m.QuerySelectorAll(".hvres-meaning")?.Take(2).Select(n => ExtractText(n).Split("\n")[0].Trim()) ?? new List<string>() { });
         }
 
         var title = m.QuerySelectorAll(".hvres-definition > *")?.FirstOrDefault()?.TextContent ?? "";
         var detail = string.Join("\n", m.QuerySelectorAll(".hvres-details > *").Select((n, i) =>
         {
-          var body = Regex.Replace(ExtractText(n).Trim(), @"\s{2,}", "\n");
+          var body = ExtractText(n).Trim();
           if (i % 2 == 0)
           {
             body = "\n<color=#33ff33><i>" + body + "</i></color>";
