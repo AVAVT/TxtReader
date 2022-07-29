@@ -63,7 +63,7 @@ PlayerSettings:
   useOSAutorotation: 1
   use32BitDisplayBuffer: 1
   preserveFramebufferAlpha: 0
-  disableDepthAndStencilBuffers: 1
+  disableDepthAndStencilBuffers: 0
   androidStartInFullscreen: 0
   androidRenderOutsideSafeArea: 1
   androidUseSwappy: 1
@@ -157,7 +157,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.AVAVT.TxtReader
     Standalone: com.Company.ProductName
-    iPhone: its.avavt.txtreader
+    iPhone: com.AVAVT.Txt-Reader
   buildNumber:
     Standalone: 0
     iPhone: 0

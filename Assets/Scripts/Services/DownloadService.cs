@@ -33,7 +33,7 @@ public class DownloadService : MonoBehaviour
       yield return null;
     }
 
-    if (www.isNetworkError || www.isHttpError)
+    if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
     {
       Debug.LogError(www.error);
       OnError(www.error);
