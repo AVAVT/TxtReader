@@ -97,18 +97,16 @@ public class Translator : MonoBehaviour
       var config = Configuration.Default.WithDefaultLoader();
       var address = "https://hvdic.thivien.net/whv/" + c;
       var context = BrowsingContext.New(config);
+      var cellSelector = ".hvres";
       var document = await context.OpenAsync(address);
 
       if (c != current) return;
-
-      var cellSelector = ".hvres";
-      var cells = document.QuerySelectorAll(cellSelector);
 
       StringBuilder builder = new StringBuilder(current + " ");
 
       var first = false;
       var second = false;
-      foreach (var cell in cells)
+      foreach (var cell in document.QuerySelectorAll(cellSelector))
       {
         if (!first)
         {
