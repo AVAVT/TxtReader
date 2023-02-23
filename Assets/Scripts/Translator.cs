@@ -13,26 +13,24 @@ public class Translator : MonoBehaviour
   public TMP_Text translationText;
   public GameObject refreshTranslationButton;
 
-  char current;
+  char _currentWord;
 
-  string CurrentFilePath => $"{Application.persistentDataPath}/translations/{current}.dat";
+  string CurrentFilePath => $"{Application.persistentDataPath}/translations/{_currentWord}.dat";
   public async Task Translate(char c)
   {
     try
     {
-      if (c == current) return;
-      current = c;
+      if (c == _currentWord) return;
+      _currentWord = c;
 
-      string pathToNewFolder = $"{Application.persistentDataPath}/translations/";
-      DirectoryInfo directory = Directory.CreateDirectory(pathToNewFolder);
+      var pathToNewFolder = $"{Application.persistentDataPath}/translations/";
+      Directory.CreateDirectory(pathToNewFolder);
 
       var hasLocalTranslation = File.Exists(CurrentFilePath);
       refreshTranslationButton.SetActive(hasLocalTranslation);
 
-      if (hasLocalTranslation)
-        translationText.text = File.ReadAllText(CurrentFilePath);
-      else
-        await RemoteTranslate();
+      if (hasLocalTranslation) translationText.text = await File.ReadAllTextAsync(CurrentFilePath);
+      else await RemoteTranslate();
     }
     catch (Exception e)
     {
@@ -46,63 +44,25 @@ public class Translator : MonoBehaviour
     RemoteTranslate().ConfigureAwait(false);
   }
 
-  // public void RemoteTranslate2()
-  // {
-  //   var address = "https://hvdic.thivien.net/whv/" + current;
-
-  //   HtmlWeb web = new HtmlWeb();
-
-  //   var htmlDoc = web.Load(address);
-
-  //   var content = htmlDoc.DocumentNode.SelectNodes("//div[@class[contains(.,'hvres')]]").Select((m, index) =>
-  //   {
-  //     if (index == 0)
-  //     {
-  //       return string.Join("\n", m.SelectNodes("//div[@class[contains(.,'hvres-meaning')]]").Take(2).Select((n, i) =>
-  //         {
-  //           if (i == 0) return n.InnerText.Split("Tổng nét")[0].Trim();
-  //           return n.InnerText.Split("Âm Nôm")[0].Trim();
-  //         }) ?? new List<string>() { });
-  //     }
-
-  //     var title = m.SelectSingleNode("//div[@class[contains(.,'hvres-definition')]]")?.FirstChild?.InnerText ?? "";
-  //     var detail = string.Join("\n", m.SelectSingleNode("//div[@class[contains(.,'hvres-details')]]").ChildNodes.Select((n, i) =>
-  //     {
-  //       var body = n.InnerText.Trim();
-  //       if (i % 2 == 0)
-  //       {
-  //         body = "\n<color=#33ff33><i>" + body + "</i></color>";
-  //       }
-  //       return body;
-  //     }) ?? new List<string>() { });
-
-  //     if (string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(detail)) return null;
-
-  //     return "-----\n<b>" + title.Trim() + "</b>\n" + detail.Trim();
-  //   });
-
-  //   var translationContent = current + " " + Regex.Replace(string.Join("\n", content), "\\s*\n\\s*", "\n");
-  //   translationText.text = translationContent;
-  // }
-
-  public async Task RemoteTranslate()
+  async Task RemoteTranslate()
   {
-    var c = current;
+    var c = _currentWord;
     try
     {
-      var filePath = $"{Application.persistentDataPath}/translations/{c}.dat";
-
-      translationText.text = c.ToString();
+      var filePath = CurrentFilePath;
+      var starterText = "<size=150%>" + _currentWord + "</size>\n";
+      
+      translationText.text = starterText;
 
       var config = Configuration.Default.WithDefaultLoader();
-      var address = "https://hvdic.thivien.net/whv/" + c;
+      var address = "https://hvdic.thivien.net/wpy/" + c;
       var context = BrowsingContext.New(config);
       var cellSelector = ".hvres";
       var document = await context.OpenAsync(address);
 
-      if (c != current) return;
+      if (c != _currentWord) return;
 
-      StringBuilder builder = new StringBuilder(current + " ");
+      var builder = new StringBuilder(starterText);
 
       var first = false;
       var second = false;
@@ -112,7 +72,7 @@ public class Translator : MonoBehaviour
         {
           first = true;
           var meanings = cell.QuerySelectorAll(".hvres-meaning");
-          if (meanings == null) continue;
+          if (meanings.Length <= 0) continue;
           builder.AppendLine(meanings[0].TextContent.Split("Tổng nét")[0].Trim());
           builder.AppendLine(meanings[1].TextContent.Split("Âm Nôm")[0].Trim());
           continue;
@@ -124,20 +84,33 @@ public class Translator : MonoBehaviour
           continue;
         }
 
-        var title = cell.QuerySelector(".hvres-definition > *")?.TextContent ?? "";
+        var title = cell.QuerySelector(".hvres-definition > *")?.TextContent.Trim() ?? "";
         var details = cell.QuerySelectorAll(".hvres-details > *");
 
-        if (string.IsNullOrWhiteSpace(title) && details == null) continue;
+        if (string.IsNullOrWhiteSpace(title) && details.Length <= 0) continue;
 
         builder.Append("-----\n<b>");
-        builder.Append(title.Trim());
+        builder.Append(title);
         builder.AppendLine("</b>");
 
-        for (int i = 0; i < details.Length; i++)
+        var skipNext = false;
+        for (var i = 0; i < details.Length; i++)
         {
+          if (skipNext)
+          {
+            skipNext = false;
+            continue;
+          }
+          
           var body = details[i].TextContent.Trim();
           if (i % 2 == 0)
           {
+            if (body.StartsWith("Từ ghép"))
+            {
+              skipNext = true;
+              continue;
+            }
+            
             body = "\n<color=#33ff33><i>" + body + "</i></color>";
           }
           builder.AppendLine(body);
@@ -146,7 +119,7 @@ public class Translator : MonoBehaviour
 
       var translationContent = Regex.Replace(builder.ToString(), "\\s*\n\\s*", "\n");
       translationText.text = translationContent;
-      File.WriteAllText(CurrentFilePath, translationContent);
+      await File.WriteAllTextAsync(filePath, translationContent);
     }
     catch (Exception e)
     {
@@ -157,7 +130,7 @@ public class Translator : MonoBehaviour
 
   static string ExtractText(IElement elem)
   {
-    string str = elem.InnerHtml;
+    var str = elem.InnerHtml;
     str = Regex.Replace(str, "\\s", " ");
     str = str.Replace("<br>", "\n");
     str = Regex.Replace(str, "<[^>]+>", "");

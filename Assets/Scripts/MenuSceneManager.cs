@@ -12,6 +12,7 @@ public class MenuSceneManager : MonoBehaviour
   public Button downloadButton;
   public void Start()
   {
+    Services<IWordDatabaseService>.Bind(new WordDatabaseService());
 #if UNITY_ANDROID && !UNITY_EDITOR
     ApplicationChrome.statusBarState = ApplicationChrome.States.TranslucentOverContent;
     ApplicationChrome.statusBarColor = ApplicationChrome.navigationBarColor = 0xff222222;
@@ -48,6 +49,11 @@ public class MenuSceneManager : MonoBehaviour
       },
       (ratio) => commonProgressBar.UpdateProgress(ratio)
     );
+  }
+
+  public void SyncWordDb()
+  {
+    Services<IWordDatabaseService>.Get().Download();
   }
 
   void ChangeProgressBarVisibility(bool isVisible)
